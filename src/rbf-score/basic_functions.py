@@ -3,13 +3,14 @@ import numpy as np
 from numpy.linalg import inv
 from numpy import linalg as LA
 import pandas as pd
-from utils.evaluations import *
 from pylab import *
 from sklearn.cluster import KMeans
 from scipy.sparse.linalg import eigs, eigsh
 import scipy.io
 from sklearn.metrics.cluster import normalized_mutual_info_score
 import networkx as nx
+
+from utils.evaluations import *
 plt.rcParams["font.family"] = "Times New Roman"
 
 def condi(M):
