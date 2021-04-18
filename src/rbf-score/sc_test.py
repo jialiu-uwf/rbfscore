@@ -1,3 +1,5 @@
+from pathlib import Path
+
 import numpy as np
 import pandas as pd
 from scipy.sparse.linalg import eigsh
@@ -39,9 +41,11 @@ def sc_test():
     rbf_fn = multiquadric
     k = 11
 
-    ds_name = 'lesmis'
-    fnn = "../../data/lesmis/"
-    data = pd.read_table(fnn + 'lesmis.txt', header=None, sep='\t').values
+    proj_root = Path('../..')
+
+    # data loading
+    data_file = proj_root / 'data/lesmis/lesmis.txt'
+    data = pd.read_csv(str(data_file), header=None, sep='\t').values
     assert data.shape[0] == data.shape[1]
     sc = spectral_clustering(data, k, c, rbf_fn)
     print(sc)
