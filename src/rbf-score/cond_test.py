@@ -112,6 +112,7 @@ def rbf_param_opt():
         )
         plot_file = result_root / '{}_cond_plot_{}.pdf'.format(ds_name, rbf_fn_name)
         plt.savefig(str(plot_file))
+        print('Plot saved!')
 
 
 if __name__ == "__main__":
