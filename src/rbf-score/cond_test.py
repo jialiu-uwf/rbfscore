@@ -1,6 +1,5 @@
 from pathlib import Path
 import numpy as np
-import numpy.matlib as matlib
 import pandas as pd
 import matplotlib.pyplot as plt
 
@@ -39,7 +38,10 @@ def distance_matrix(data, centers):
         assert centers[:, i].shape == (n,)
         v1 = data[:, i].reshape(m, 1)
         v2 = centers[:, i].reshape(n, 1)
-        dm += np.square(matlib.repmat(v1, 1, n) - matlib.repmat(v2.T, m, 1))
+        dm += np.square(
+            # matlib.repmat(v1, 1, n) - matlib.repmat(v2.T, m, 1)
+            np.tile(v1, (1, n)) - np.tile(v2.T, (m, 1))
+        )
     dm = np.sqrt(dm)
     return dm
 
