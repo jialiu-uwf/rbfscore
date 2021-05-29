@@ -2,6 +2,7 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
+from scipy.io import loadmat
 
 
 # functions
@@ -57,6 +58,10 @@ def rbf(c, data, rbf_fn):
     return np.multiply(rbf_fn(dm, c), data)
 
 
+def load_mat(path, mat_name='A'):
+    return loadmat(path)[mat_name]
+
+
 def rbf_param_opt():
     """
     RBF parameters optimization
@@ -83,38 +88,41 @@ def rbf_param_opt():
     result_root = proj_root / 'data/results'
 
     # data loading
-    ds_name = 'lesmis'
-    data_file = proj_root / 'data/lesmis/lesmis.txt'
-    data = pd.read_csv(str(data_file), header=None, sep='\t').values
-    assert data.shape[0] == data.shape[1]
+    data_root = proj_root / 'data/datasets'
+    for f in data_root.iterdir():
+        if f.is_file() and f.name[-4:] == '.mat':
+            ds_name = f.stem
+            data = load_mat(f.absolute().__str__())
+            assert data.shape[0] == data.shape[1]
 
-    # computation
-    c_trials = np.linspace(c_start, c_end, c_steps)
-    for rbf_fn_name in rbf_fns:
-        rbf_fn = rbf_fns[rbf_fn_name]
+            # computation
+            c_trials = np.linspace(c_start, c_end, c_steps)
+            for rbf_fn_name in rbf_fns:
+                rbf_fn = rbf_fns[rbf_fn_name]
 
-        conditions = list()
-        for c in c_trials:
-            adj_mat = rbf(c, data, rbf_fn)
-            conditions.append(
-                np.linalg.cond(adj_mat)
-            )
-        result = np.vstack(
-            (c_trials, np.asarray(conditions))
-        )
-        result = pd.DataFrame(
-            result,
-            index=['c', 'cond']
-        )
-        result.T.plot(x='c', y='cond', logy=True)
-        plt.xlabel('c value')
-        plt.ylabel('Condition number (log scale)')
-        plt.title(
-            'Condition numbers over c values, {} function'.format(rbf_fn_name)
-        )
-        plot_file = result_root / '{}_cond_plot_{}.pdf'.format(ds_name, rbf_fn_name)
-        plt.savefig(str(plot_file))
-        print('Plot saved!')
+                conditions = list()
+                for c in c_trials:
+                    adj_mat = rbf(c, data, rbf_fn)
+                    conditions.append(
+                        np.linalg.cond(adj_mat)
+                    )
+                result = np.vstack(
+                    (c_trials, np.asarray(conditions))
+                )
+                result = pd.DataFrame(
+                    result,
+                    index=['c', 'cond']
+                )
+                result.T.plot(x='c', y='cond', logy=True)
+                plt.xlabel('c value')
+                plt.ylabel('Condition number (log scale)')
+                plt.title(
+                    f'Condition numbers over c values, {rbf_fn_name} function'
+                )
+                plot_file = result_root / f'{ds_name}_cond_plot_{rbf_fn_name}.pdf'
+                plt.savefig(str(plot_file))
+                plt.close()
+                print(f'finished with dataset {ds_name} with {rbf_fn_name}')
 
 
 if __name__ == "__main__":
