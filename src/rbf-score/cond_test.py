@@ -2,7 +2,6 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
-from scipy.io import loadmat
 
 
 # functions
@@ -58,10 +57,6 @@ def rbf(c, data, rbf_fn):
     return np.multiply(rbf_fn(dm, c), data)
 
 
-def load_mat(path, mat_name='A'):
-    return loadmat(path)[mat_name]
-
-
 def rbf_param_opt():
     """
     RBF parameters optimization
@@ -84,20 +79,21 @@ def rbf_param_opt():
         'Gaussian': gaussian
     }
 
-    proj_root = Path('../..')
+    proj_root = Path(__file__).parent.parent.parent
     result_root = proj_root / 'data/results'
 
     # data loading
     data_root = proj_root / 'data/datasets'
     for f in data_root.iterdir():
-        if f.is_file() and f.name[-4:] == '.mat':
+        if f.is_file() and f.suffix == '.pkl':
             ds_name = f.stem
-            data = load_mat(f.absolute().__str__())
+            data = pd.read_pickle(str(f)).astype('float')
             assert data.shape[0] == data.shape[1]
 
             # computation
             c_trials = np.linspace(c_start, c_end, c_steps)
             for rbf_fn_name in rbf_fns:
+                print(f'Working on dataset {ds_name} with {rbf_fn_name}')
                 rbf_fn = rbf_fns[rbf_fn_name]
 
                 conditions = list()
@@ -113,17 +109,40 @@ def rbf_param_opt():
                     result,
                     index=['c', 'cond']
                 )
-                result.T.plot(x='c', y='cond', logy=True)
-                plt.xlabel('c value')
-                plt.ylabel('Condition number (log scale)')
-                plt.title(
-                    f'Condition numbers over c values, {rbf_fn_name} function'
+                result.T.to_csv(
+                    str(result_root / f'{ds_name}_{rbf_fn_name}_cond_result.csv'),
+                    index=False
                 )
-                plot_file = result_root / f'{ds_name}_cond_plot_{rbf_fn_name}.pdf'
-                plt.savefig(str(plot_file))
-                plt.close()
-                print(f'finished with dataset {ds_name} with {rbf_fn_name}')
+
+
+def plot():
+    proj_root = Path(__file__).parent.parent.parent
+    result_root = proj_root / 'data/results'
+    plot_root = proj_root / 'data/plot'
+
+    for f in result_root.iterdir():
+        if f.suffix != '.csv':
+            continue
+        ds_name, rbf_fn_name = f.name.split('_')[:2]
+        print(f'Plotting {ds_name} {rbf_fn_name}')
+        result = pd.read_csv(
+            str(f)
+        )
+        plt.xlabel('c value')
+        plt.ylabel('Condition number (log scale)')
+        result.plot(
+            x='c',
+            y='cond',
+            logy=True
+        )
+        plt.title(
+            f'Condition numbers over c values, {rbf_fn_name} function'
+        )
+        plot_file = plot_root / f'{f.stem}.pdf'
+        plt.savefig(str(plot_file))
+        plt.close()
 
 
 if __name__ == "__main__":
     rbf_param_opt()
+    plot()
