@@ -22,12 +22,12 @@ def scan_processed(root: Path):
 def data_prep(overwrite: bool):
     data_root = Path(__file__).parent.parent.parent / 'data'
     processed_root = data_root / 'datasets'
-    existing_datasets = scan_processed(processed_root) if overwrite else list()
+    existing_datasets = scan_processed(processed_root) if not overwrite else list()
     for f in (data_root / 'raw').iterdir():
         if f.suffix not in supported_exts.keys():
             print(f'File {str(f)} not supported')
             continue
-        if overwrite and f.stem in existing_datasets:
+        if not overwrite and f.stem in existing_datasets:
             print(f'Dataset {f.stem} already exist')
             continue
         try:
