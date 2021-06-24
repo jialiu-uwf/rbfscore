@@ -51,15 +51,15 @@ def synthesize_data():
     configurations = [
         {
             'N': [128, 256, 512, 1024, 2048],
-            'k': [20, 30, 40],
-            'maxk': [100, 200],
-            'mu': [0.1, 0.2, 0.5]
+            'k': [20],
+            'maxk': [100],
+            'mu': [0.1, 0.2, 0.3, 0.5, 0.6, 0.75]
         }
     ]
     prefix_templ = '-prefix {N}_{k}_{maxk}_{mu}'
     run_params = list()
     [run_params.extend(flatten(conf)) for conf in configurations]
-    cli_template = 'bin/benchmark {option_str} {prefix_option}'
+    cli_template = '../bin/benchmark {option_str} {prefix_option}'
     for param in run_params:
         prefix_option = prefix_templ.format(
             **param
