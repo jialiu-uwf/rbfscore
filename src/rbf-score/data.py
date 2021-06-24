@@ -2,10 +2,19 @@
 Data module
 """
 
+from pathlib import Path
+
+import networkx
 import numpy as np
 import pandas as pd
-from pathlib import Path
 from scipy.io import loadmat
+
+supported_exts = {
+    '.mat': 'Matlab format adjacency matrix',
+    '.txt': 'Adjacency matrix',
+    '.dat': 'Edge list of undirected unweighted graph',
+    '.csv': 'Adjacency matrix in CSV format'
+}
 
 
 def load_mat(path: Path, mat_name: str = 'A'):
@@ -24,7 +33,7 @@ def load_mat(path: Path, mat_name: str = 'A'):
 
     Returns
     -------
-    a DataFrame holding the data
+    a DataFrame holding the adjacency matrix
     """
     mat = loadmat(str(path))[mat_name]
     mat[mat != 0] = 1
@@ -43,7 +52,7 @@ def load_txt(path: Path):
 
     Returns
     -------
-    a DataFrame holding the data
+    a DataFrame holding the adjacency matrix
     """
     return load_csv(path, '\t')
 
@@ -62,9 +71,34 @@ def load_csv(path: Path, delimiter: str = ','):
 
     Returns
     -------
-    a DataFrame holding the data
+    a DataFrame holding the adjacency matrix
     """
     return pd.read_csv(str(path), header=None, delimiter=delimiter, dtype=np.float_).dropna(axis=1).astype('int8')
+
+
+def load_edge_list(path: Path) -> pd.DataFrame:
+    """
+    Load edge list format data
+    for undirected unweighted graph with format like
+
+    1 0
+    1 30
+    2 15
+    ...
+
+    Parameters
+    ----------
+    path
+        path to the data file
+
+    Returns
+    -------
+    a DataFrame holding the adjacency matrix
+    """
+    g = networkx.read_edgelist(
+        str(path)
+    )
+    return pd.DataFrame(networkx.to_numpy_array(g, dtype=np.int8))
 
 
 def load_data(data_path: Path):
@@ -87,7 +121,8 @@ def load_data(data_path: Path):
     handlers = {
         '.mat': load_mat,
         '.txt': load_txt,
-        '.csv': load_csv
+        '.csv': load_csv,
+        '.dat': load_edge_list
     }
     if ext not in handlers:
         raise ValueError(f'The file extension {ext[1:]} is not supported!')
